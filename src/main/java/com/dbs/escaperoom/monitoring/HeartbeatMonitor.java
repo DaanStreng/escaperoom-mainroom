@@ -58,9 +58,10 @@ public class HeartbeatMonitor {
 
         public void run(){
             Date date = new Date();
-            date.setTime(date.getTime()-(this.intervalSecond*1000));
-            List<RoomRegistration> regs = this.roomRegistrationRepository.getWhereHeartbeatDue(date);
+            date.setTime(date.getTime()-(this.intervalSecond*10));
+            List<RoomRegistration> regs = this.roomRegistrationRepository.forceWhereHeratbeatDue(date);
             for(RoomRegistration rr : regs){
+                System.out.println(rr.getName());
                 this.sendHeartBeat(rr);
             }
         }
@@ -68,8 +69,13 @@ public class HeartbeatMonitor {
         void sendHeartBeat(RoomRegistration rr){
             try {
                 RestTemplate restTemplate = new RestTemplate();
-                SuccessMessage quote = restTemplate.getForObject("https://daanstreng.nl/api/test.json", SuccessMessage.class);
-                rr.setOnline(true);
+                SuccessMessage quote = restTemplate.getForObject(rr.getEndPoint()+"/registration/heartbeat", SuccessMessage.class);
+                if(quote.getMessage().equals("success")) {
+                    rr.setOnline(true);
+                }
+                else{
+                    rr.setOnline(false);
+                }
                 rr.setLastHeartbeat(new Date());
                 roomRegistrationRepository.save(rr);
             }

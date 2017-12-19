@@ -21,4 +21,10 @@ public interface RoomRegistrationRepository extends CrudRepository<RoomRegistrat
 
     @Query("SELECT  rr FROM RoomRegistration rr WHERE rr.lastHeartbeat < ?1 AND rr.online = true")
     List<RoomRegistration> getWhereHeartbeatDue(Date dueTime);
+
+    @Query("SELECT  rr FROM RoomRegistration rr WHERE rr.lastHeartbeat < ?1")
+    List<RoomRegistration> forceWhereHeratbeatDue(Date dueTime);
+
+    @Query("SELECT  rr FROM RoomRegistration rr WHERE rr.online = ?1")
+    List<RoomRegistration> getOnline(Boolean online);
 }

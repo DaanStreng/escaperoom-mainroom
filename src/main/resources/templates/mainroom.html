@@ -3,9 +3,133 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css"></link>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+    <style>
+        .door{
+            min-width:100%;
+            min-height:300px;
+            background-size:contain;
+            background-position:center center;
+            background-repeat:no-repeat;
+        }
+        .accessible-door{
+            background-image:url('img/closeddoor.png');
+        }
+        .accessible-door:hover{
+            background-image:url('img/opendoor.png');
+
+        }
+        .completed-door{
+            background-image:url('img/successdoor.png');
+        }
+        .locked-door{
+            background-image:url('img/lockeddoor.png');
+        }
+    </style>
 </head>
 <body>
 
-<p th:text="'Hello, ' + ${uuid} + '!'" />
+<p id="uuidContainer" style="display:none" th:text="${userUuid}" />
+
+<div class="section"></div>
+<main>
+    <center>
+        <div class="section"></div>
+        <div class="section"></div>
+        <div class="container">
+            <div class="z-depth-1 grey lighten-4 row" style="    min-width: 400px;display: inline-block; padding: 32px 48px 0px 48px; border: 1px solid #EEE;">
+
+                <div id="enterForm" class="col s12" method="post" action="">
+                    <div class="row">
+                        <div class="col s12">
+                            <h4 id="usernameContainer"></h4>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row" id="doorContainer">
+
+            </div>
+        </div>
+
+
+    </center>
+
+    <div class="section"></div>
+    <div class="section"></div>
+</main>
+<script  type="text/javascript" th:inline="javascript">
+    var completedRooms = /*[[${completedRooms}]]*/ [];
+    var rooms = /*[[${rooms}]]*/ [];
+</script>
+<script>
+    var uuid = "";
+
+    $(document).ready(function(){
+        $("select").material_select();
+        uuid = $("#uuidContainer").html();
+        completedRooms.forEach(function(elm){
+           $("option[value="+elm+"]").append("(completed)");
+        });
+        var completed = true;
+        rooms.forEach(function(elm){
+            if (!completedRooms.includes(elm.uuid)){
+                completed = false;
+            }
+        });
+        if(completed){
+            Materialize.toast("<h1>YOU COMPLETED ALL THE ROOMS, CONGRATULATIONS!</h1>",10000,"pink");
+        }
+        $("select").material_select();
+        rooms.forEach(function(elm){
+            if(elm.online) {
+                var col = $("<div></div>").addClass("col s4");
+                var door = $("<div></div>").addClass("door");
+                door.attr("uuid",elm.uuid);
+                door.data("room",elm);
+                door.attr("title",elm.name);
+                if(completedRooms.includes(elm.uuid)){
+                    door.addClass("completed-door");
+                }
+                else{
+                    door.addClass("accessible-door");
+                }
+                col.append(door);
+                $("#doorContainer").append(col);
+            }
+        });
+        $(".door").each(function(){
+            if ($(this).data("room").opensRoom){
+                var rr = $(this).data("room").opensRoom;
+                rr = rr.uuid;
+                var me = $(this);
+                if(rr) {
+                    var odr = $(".door[uuid=" + rr + "]");
+                    if (odr) {
+                        if (!completedRooms.includes(me.data("room").uuid)) {
+                            $(".door[uuid=" + rr + "]").removeClass("accessible-door");
+                            $(".door[uuid=" + rr + "]").addClass("locked-door");
+                            $(".door[uuid=" + rr + "]").attr("title","You need to open "+me.data("room").name+" to play this room");
+                        }
+                    }
+                }
+            }
+        });
+        $(".door").click(function(){
+            var string = $(this).attr("title");
+            Materialize.toast(string,3000,"blue");
+            if ($(this).hasClass("accessible-door")){
+                var value = $(this).data("room").uuid;
+                document.location.href = "/room/"+value+"/view/player/"+uuid+"/enter";
+            }
+        });
+    })
+</script>
 </body>
 </html>

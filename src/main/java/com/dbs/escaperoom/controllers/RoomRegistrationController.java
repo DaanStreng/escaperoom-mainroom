@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.PathParam;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -28,11 +29,11 @@ public class RoomRegistrationController  {
     private RoomRegistrationRepository roomRepository;
 
     @RequestMapping(method = RequestMethod.POST,path = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
-    public RoomRegistration registerRoom(@RequestParam String endpoint, @RequestParam String secret, @RequestParam String name){
+    public RoomRegistration registerRoom(@RequestParam String endpoint, @RequestParam String secret, @RequestParam String name, @RequestParam String open_room){
         try{
             URL u = new URL(endpoint);
             u.toURI();
-            if (!endpoint.contains(".")){
+            if (!endpoint.contains(".")&&!endpoint.contains("localhost:")){
                 throw new IllegalArgumentException();
             }
         }catch(Exception ex){
@@ -43,9 +44,24 @@ public class RoomRegistrationController  {
             rr = new RoomRegistration(endpoint,secret);
             rr.setName(name);
         }
-
+        if (!open_room.equals("0")){
+            RoomRegistration rk = roomRepository.findOne(open_room);
+            if (rk!=null){
+                rr.setOpensRoom(rk);
+            }
+        }
         roomRepository.save(rr);
         return rr;
+    }
+    @RequestMapping(method = RequestMethod.GET,path = "/allrooms", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object[] getAll(){
+        Iterable<RoomRegistration> rooms = roomRepository.findAll();
+        ArrayList<RoomRegistration> rr = new ArrayList<RoomRegistration>();
+        for(RoomRegistration r : rooms){
+            rr.add(r);
+        }
+
+        return rr.toArray();
     }
 
     @RequestMapping(method = RequestMethod.POST,path="/removeroom")
@@ -78,6 +94,7 @@ public class RoomRegistrationController  {
             throw new IllegalArgumentException("no room for uuid");
         }
         rr.setOpensRoom(r2);
+        roomRepository.save(rr);
         return new SuccessMessage();
     }
 

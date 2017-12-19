@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
@@ -31,10 +32,13 @@ public class RoomRegistration {
     private Date lastHeartbeat;
 
     private boolean online;
+
     @OneToOne
     private RoomRegistration opensRoom;
 
     private String endPoint;
+
+    private ArrayList<String> completedPlayersUUIDS;
 
     public String getUuid() {
         return uuid;
@@ -59,6 +63,7 @@ public class RoomRegistration {
         this.endPoint = endpoint;
         this.secret = secret;
         this.setLastHeartbeat(new Date());
+        this.completedPlayersUUIDS = new ArrayList<String>();
     }
 
     public String getUnlockKey() {
@@ -95,5 +100,18 @@ public class RoomRegistration {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public ArrayList<String> getCompletedPlayersUUIDS() {
+        return completedPlayersUUIDS;
+    }
+
+    public void setCompletedPlayersUUIDS(ArrayList<String> completedPlayersUUIDS) {
+        this.completedPlayersUUIDS = completedPlayersUUIDS;
+    }
+    public void playerCompletedRoom(String playerUUID){
+        if (this.completedPlayersUUIDS == null)
+            this.completedPlayersUUIDS = new ArrayList<String>();
+        this.completedPlayersUUIDS.add(playerUUID);
     }
 }
